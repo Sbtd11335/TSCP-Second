@@ -1,5 +1,5 @@
-#ifndef __EXTENSIONS_FUNCTIONS_HPP
-#	define __EXTENSIONS_FUNCTIONS_HPP
+#ifndef __TSCP_EXTENSIONS_FUNCTIONS_HPP
+#	define __TSCP_EXTENSIONS_FUNCTIONS_HPP
 
 #	include <string.h>
 #	include <ctype.h>

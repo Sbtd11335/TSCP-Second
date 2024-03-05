@@ -1,5 +1,5 @@
-#ifndef __SYSTEM_ERROR_HPP
-#	define __SYSTEM_ERROR_HPP
+#ifndef __TSCP_SYSTEM_ERROR_HPP
+#	define __TSCP_SYSTEM_ERROR_HPP
 
 #	include "../Macro.hpp"
 #	include <Windows.h>

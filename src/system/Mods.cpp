@@ -12,7 +12,10 @@ Mods::~Mods()
 	{
 		__Function* modFinal = (__Function*)GetProcAddress(mods[mCount], "__FINALIZE");
 		if (modFinal != nullptr)
+		{
 			modFinal();
+			FreeLibrary(mods[mCount]);
+		}			
 	}
 }
 // Methods
@@ -35,7 +38,10 @@ void Mods::load()
 			sprintf_s(dll, sizeof(dll), "%4s", &modsDirent->d_name[strlen(modsDirent->d_name) - 4]);
 			if (_stricmp(dll, ".dll") == 0)
 			{
-				sprintf_s(modFile, sizeof(modFile), "%s%s", modsFolder, modsDirent->d_name);
+				if (modsFolder[strlen(modsFolder) - 1] == '/')
+					sprintf_s(modFile, sizeof(modFile), "%s%s", modsFolder, modsDirent->d_name);
+				else
+					sprintf_s(modFile, sizeof(modFile), "%s/%s", modsFolder, modsDirent->d_name);
 				HMODULE mod = LoadLibraryA(modFile);
 				if (mod != NULL)
 				{
@@ -45,29 +51,41 @@ void Mods::load()
 					if (modFunc != nullptr)
 						(*modFunc)();
 					modFunc = nullptr;
-					//targetSize
+					//functionSize
 					functionSize = 64;
-					modFunc = (__Function*)GetProcAddress(mod, "__FUNCTIONSIZE");
-					if (modFunc != nullptr)
-						functionSize = (size_t)(*modFunc)();
-					modFunc = nullptr;
-					//Function
+					__Constant* modConst = (__Constant*)GetProcAddress(mod, "__FUNCTIONSIZE");
+					if (modConst != nullptr)
+						functionSize = *(size_t*)(modConst);
+					printf("%zd\n", functionSize);
+					modConst = nullptr;
+					//function
 					char* function = new char[functionSize] {};
 					char* funcName = new char[functionSize] {};
-					modFunc = (__Function*)GetProcAddress(mod, "__FUNCTION");
-					if (modFunc != nullptr)
+					char* funcSub = new char[functionSize] {};
+					modConst = (__Constant*)GetProcAddress(mod, "__FUNCTION");
+					if (modConst != nullptr)
 					{
-						strcpy_s(function, functionSize, (const char*)modFunc());
+						strcpy_s(function, functionSize, *(const char**)modConst);
 						for (size_t fCount{}; fCount < Functions::countChar(function, ',') + 1; fCount++)
 						{
 							Functions::splitString(funcName, functionSize, function, ',', fCount);
 							__Function* modFunction = (__Function*)GetProcAddress(mod, funcName);
 							if (modFunction != nullptr)
+							{
+								// __SCENE
+								Functions::subString(funcSub, functionSize, funcName, 0, 7);
+								if (strcmp(funcSub, "__SCENE") == 0)
+								{
+									window.appendScene((Scene*)(*modFunction)());
+									continue;
+								}
 								(*modFunction)();
+							}
 						}
 					}
 					delete[]function;
 					delete[]funcName;
+					delete[]funcSub;
 				}
 			}
 		}
